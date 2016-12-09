@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/theairkit/runcmd"
+	"github.com/kovetskiy/runcmd"
 )
 
 type RecursiveFlag int
@@ -18,7 +18,7 @@ const (
 	RF_Hard
 )
 
-type ZfsEntry interface {
+type ZFSEntry interface {
 	GetProperty(string) (string, error)
 	GetPropertyInt(string) (int64, error)
 	SetProperty(string, string) error
@@ -31,7 +31,7 @@ type ZfsEntry interface {
 }
 
 type zfsEntryBase struct {
-	runner Zfs
+	runner ZFS
 	Path   string
 }
 
@@ -142,87 +142,87 @@ func (z zfsEntryBase) GetLastPath() string {
 	return buf[len(buf)-1]
 }
 
-type Fs struct {
+type FS struct {
 	zfsEntryBase
 }
 
-// See Zfs.CreateFs
-func CreateFs(zfsPath string) (Fs, error) {
-	return std.CreateFs(zfsPath)
+// See ZFS.CreateFS
+func CreateFS(zfsPath string) (FS, error) {
+	return std.CreateFS(zfsPath)
 }
 
 // Actually creates filesystem
-func (z Zfs) CreateFs(zfsPath string) (Fs, error) {
-	fs := NewFs(zfsPath)
+func (z ZFS) CreateFS(zfsPath string) (FS, error) {
+	fs := NewFS(zfsPath)
 	ok, err := fs.Exists()
 	if err != nil {
-		return z.NewFs(zfsPath), err
+		return z.NewFS(zfsPath), err
 	}
 	if ok {
-		return z.NewFs(zfsPath), errors.New(fmt.Sprintf("fs %s already exists", zfsPath))
+		return z.NewFS(zfsPath), errors.New(fmt.Sprintf("fs %s already exists", zfsPath))
 	}
 
 	c := z.Command("zfs", "create", "-p", zfsPath)
 
 	_, stderr, err := c.Output()
-	return z.NewFs(zfsPath), parseError(err, stderr)
+	return z.NewFS(zfsPath), parseError(err, stderr)
 }
 
-// See Zfs.NewFs
-func NewFs(zfsPath string) Fs {
-	return std.NewFs(zfsPath)
+// See ZFS.NewFS
+func NewFS(zfsPath string) FS {
+	return std.NewFS(zfsPath)
 }
 
-// Return Fs wrapper without any checks and actualy creation
-func (z Zfs) NewFs(zfsPath string) Fs {
-	return Fs{zfsEntryBase{z, zfsPath}}
+// Return FS wrapper without any checks and actualy creation
+func (z ZFS) NewFS(zfsPath string) FS {
+	return FS{zfsEntryBase{z, zfsPath}}
 }
 
-// See Zfs.ListFs
-func ListFs(path string) ([]Fs, error) {
-	return std.ListFs(path)
+// See ZFS.ListFS
+func ListFS(path string) ([]FS, error) {
+	return std.ListFS(path)
 }
 
 // Return list of all found filesystems
-func (z Zfs) ListFs(path string) ([]Fs, error) {
+func (z ZFS) ListFS(path string) ([]FS, error) {
 	c := z.Command("zfs", "list", "-Hr", "-o", "name", path)
 
 	stdout, stderr, err := c.Output()
 	if err != nil {
 		err := parseError(err, stderr)
 		if NotExist.MatchString(err.Error()) {
-			return []Fs{}, nil
+			return []FS{}, nil
 		}
 
-		return []Fs{}, parseError(err, stderr)
+		return []FS{}, parseError(err, stderr)
 	}
 
-	filesystems := []Fs{}
+	filesystems := []FS{}
 	for _, fs := range strings.Split(strings.TrimSpace(string(stdout)), "\n") {
 		if fs == "" {
 			continue
 		}
-		filesystems = append(filesystems, z.NewFs(fs))
+		filesystems = append(filesystems, z.NewFS(fs))
 	}
 
 	return filesystems, nil
 }
 
-func (f Fs) Promote() error {
+func (f FS) Promote() error {
 	c := f.runner.Command("zfs", "promote", f.Path)
 
 	_, stderr, err := c.Output()
 	return parseError(err, stderr)
 }
 
-func (f Fs) Mount() error {
+func (f FS) Mount() error {
 	c := f.runner.Command("zfs", "mount", f.Path)
 
 	_, stderr, err := c.Output()
 	return parseError(err, stderr)
 }
 
-func (f Fs) Unmount() error {
+func (f FS) Unmount() error {
 	c := f.runner.Command("zfs", "unmount", f.Path)
 
 	_, stderr, err := c.Output()

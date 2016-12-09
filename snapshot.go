@@ -6,41 +6,41 @@ import (
 	"strings"
 )
 
-// See Zfs.NewSnapshot
+// See ZFS.NewSnapshot
 func NewSnapshot(snapshotPath string) Snapshot {
 	return std.NewSnapshot(snapshotPath)
 }
 
 // Return Snapshot wrapper without any checks and actualy creation
-func (z Zfs) NewSnapshot(snap string) Snapshot {
+func (z ZFS) NewSnapshot(snap string) Snapshot {
 	buf := strings.Split(snap, "@")
 	path := buf[0]
 	name := buf[1]
-	return Snapshot{zfsEntryBase{z, snap}, NewFs(path), name}
+	return Snapshot{zfsEntryBase{z, snap}, NewFS(path), name}
 }
 
 type Snapshot struct {
 	zfsEntryBase
-	Fs   Fs
+	FS   FS
 	Name string
 }
 
-func (s Snapshot) Clone(targetPath string) (Fs, error) {
-	if s.GetPool() != NewFs(targetPath).GetPool() {
-		return Fs{}, PoolError
+func (s Snapshot) Clone(targetPath string) (FS, error) {
+	if s.GetPool() != NewFS(targetPath).GetPool() {
+		return FS{}, PoolError
 	}
 
 	c := s.runner.Command("zfs", "clone", "-p", s.Path, targetPath)
 
 	_, _, err := c.Output()
 	if err != nil {
-		return Fs{}, err
+		return FS{}, err
 	}
 
-	return Fs{zfsEntryBase{s.runner, targetPath}}, nil
+	return FS{zfsEntryBase{s.runner, targetPath}}, nil
 }
 
-func (f Fs) Snapshot(name string) (Snapshot, error) {
+func (f FS) Snapshot(name string) (Snapshot, error) {
 	snapshotPath := f.Path + "@" + name
 	c := f.runner.Command("zfs", "snapshot", snapshotPath)
 
@@ -53,7 +53,7 @@ func (f Fs) Snapshot(name string) (Snapshot, error) {
 	return snap, nil
 }
 
-func (f Fs) ListSnapshots() ([]Snapshot, error) {
+func (f FS) ListSnapshots() ([]Snapshot, error) {
 	c := f.runner.Command(
 		"zfs", "list", "-Hr", "-o", "name", "-t", "snapshot", f.Path,
 	)
@@ -80,13 +80,13 @@ func (f Fs) ListSnapshots() ([]Snapshot, error) {
 	return snapshots, nil
 }
 
-func notExits(e ZfsEntry) error {
+func notExits(e ZFSEntry) error {
 	return errors.New(
 		"cannot open '" + e.getPath() + "': dataset does not exist",
 	)
 }
 
-func (s Snapshot) Send(to ZfsEntry) error {
+func (s Snapshot) Send(to ZFSEntry) error {
 	rc, stdinPipe, err := to.Receive()
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (s Snapshot) Send(to ZfsEntry) error {
 	return parseError(rc.Wait(), nil)
 }
 
-func (s Snapshot) SendWithParams(to ZfsEntry) error {
+func (s Snapshot) SendWithParams(to ZFSEntry) error {
 	rc, stdinPipe, err := to.Receive()
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func (s Snapshot) SendWithParams(to ZfsEntry) error {
 	return parseError(rc.Wait(), nil)
 }
 
-func (s Snapshot) SendIncrementalWithParams(base Snapshot, to ZfsEntry) error {
+func (s Snapshot) SendIncrementalWithParams(base Snapshot, to ZFSEntry) error {
 	rc, stdinPipe, err := to.Receive()
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func (s Snapshot) SendIncrementalWithParams(base Snapshot, to ZfsEntry) error {
 	return parseError(rc.Wait(), nil)
 }
 
-func (s Snapshot) SendIncremental(base Snapshot, to ZfsEntry) error {
+func (s Snapshot) SendIncremental(base Snapshot, to ZFSEntry) error {
 	rc, stdinPipe, err := to.Receive()
 	if err != nil {
 		return err
@@ -247,17 +247,17 @@ func (s Snapshot) SendIncrementalStreamWithParams(
 	return parseError(c.Wait(), nil)
 }
 
-func (s Snapshot) ListClones() ([]Fs, error) {
-	fss, err := ListFs(s.GetPool())
+func (s Snapshot) ListClones() ([]FS, error) {
+	fss, err := ListFS(s.GetPool())
 	if err != nil {
-		return []Fs{}, err
+		return []FS{}, err
 	}
 
-	clones := []Fs{}
+	clones := []FS{}
 	for _, fs := range fss {
 		origin, err := fs.GetProperty("origin")
 		if err != nil {
-			return []Fs{}, err
+			return []FS{}, err
 		}
 
 		if origin == s.Path {

@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/theairkit/runcmd"
+	"github.com/kovetskiy/runcmd"
 )
 
 var (
@@ -25,21 +25,21 @@ func init() {
 }
 
 func TestGetPool(t *testing.T) {
-	pool := NewFs("tank/some/thing").GetPool()
+	pool := NewFS("tank/some/thing").GetPool()
 	if pool != "tank" {
 		t.Error("GetPool: Wrong pool")
 	}
 }
 
 func TestGetLastPath(t *testing.T) {
-	pool := NewFs("tank/some/thing").GetLastPath()
+	pool := NewFS("tank/some/thing").GetLastPath()
 	if pool != "thing" {
 		t.Error("[LastPath] Wrong last name")
 	}
 }
 
 func TestExists(t *testing.T) {
-	ok, err := NewFs(testPath).Exists()
+	ok, err := NewFS(testPath).Exists()
 	if err != nil {
 		t.Error("[Exists]", err)
 	}
@@ -48,7 +48,7 @@ func TestExists(t *testing.T) {
 		t.Errorf("[Exists] %s exists, but returned false", testPath)
 	}
 
-	ok, err = NewFs(unicorn).Exists()
+	ok, err = NewFS(unicorn).Exists()
 	if err != nil {
 		t.Error(err)
 	}
@@ -57,7 +57,7 @@ func TestExists(t *testing.T) {
 		t.Error("[Exists] unicorns doesn't exists, but returned true")
 	}
 
-	ok, err = NewFs(badDataset).Exists()
+	ok, err = NewFS(badDataset).Exists()
 	if ok {
 		t.Error("[Exists] returned true on bad dataset")
 	}
@@ -66,36 +66,36 @@ func TestExists(t *testing.T) {
 	}
 }
 
-func TestCreateFs(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+func TestCreateFS(t *testing.T) {
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
-		t.Fatal("[CreateFs] error creating fs:", err)
+		t.Fatal("[CreateFS] error creating fs:", err)
 	}
 	defer fs.Destroy(RF_Hard)
 
 	if ok, _ := fs.Exists(); !ok {
-		t.Fatal("[CreateFs] fs not created!")
+		t.Fatal("[CreateFS] fs not created!")
 	}
 
-	_, err = CreateFs(testPath + "/fs1")
+	_, err = CreateFS(testPath + "/fs1")
 	if err == nil {
-		t.Error("[CreateFs] created allready existed fs")
+		t.Error("[CreateFS] created allready existed fs")
 	}
 	if !AllreadyExists.MatchString(err.Error()) {
-		t.Error("[CreateFs] wrong error creating dup fs:", err)
+		t.Error("[CreateFS] wrong error creating dup fs:", err)
 	}
 
-	_, err = CreateFs(badDataset)
+	_, err = CreateFS(badDataset)
 	if err == nil {
-		t.Error("[CreateFs] created fs with bad name")
+		t.Error("[CreateFS] created fs with bad name")
 	}
 	if !InvalidDataset.MatchString(err.Error()) {
-		t.Error("[CreateFs] wrong error while creating fs with bad name:", err)
+		t.Error("[CreateFS] wrong error while creating fs with bad name:", err)
 	}
 }
 
 func TestGetProperty(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[GetProperty] error creating fs:", err)
 	}
@@ -123,7 +123,7 @@ func TestGetProperty(t *testing.T) {
 }
 
 func TestSetProperty(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[SetProperty] error creating fs:", err)
 	}
@@ -144,7 +144,7 @@ func TestSetProperty(t *testing.T) {
 }
 
 func TestSnapshot(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[Snapshot] error creating fs:", err)
 	}
@@ -162,9 +162,9 @@ func TestSnapshot(t *testing.T) {
 	if s.Name != "s1" {
 		t.Error("[Snapshot] wrong snapshot name: %s, wanted: %s", s.Name, "s1")
 	}
-	if s.Fs.Path != testPath+"/fs1" {
+	if s.FS.Path != testPath+"/fs1" {
 		t.Error("[Snapshot] wrong snapshot fs path: %s, wanted: %s",
-			s.Fs.Path, testPath+"/fs1")
+			s.FS.Path, testPath+"/fs1")
 	}
 
 	if ok, _ := s.Exists(); !ok {
@@ -175,7 +175,7 @@ func TestSnapshot(t *testing.T) {
 		t.Error("[Snapshot] NewSnapshot not works...")
 	}
 
-	_, err = NewFs(unicorn).Snapshot("s2")
+	_, err = NewFS(unicorn).Snapshot("s2")
 	if err == nil {
 		t.Error("[Snapshot] created snapshot on not existent fs")
 	}
@@ -183,7 +183,7 @@ func TestSnapshot(t *testing.T) {
 		t.Error("[Snapshot] wrong error creating snap on unicorn:", err)
 	}
 
-	_, err = NewFs(badDataset).Snapshot("test")
+	_, err = NewFS(badDataset).Snapshot("test")
 	if err == nil {
 		t.Error("[Snapshot] created snapshot for bad fs")
 	}
@@ -194,7 +194,7 @@ func TestSnapshot(t *testing.T) {
 }
 
 func TestClone(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[Clone] error creating fs:", err)
 	}
@@ -227,32 +227,32 @@ func TestClone(t *testing.T) {
 	}
 }
 
-func TestDestroyFs(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs5")
+func TestDestroyFS(t *testing.T) {
+	fs, err := CreateFS(testPath + "/fs5")
 	if err != nil {
-		t.Fatal("[DestroyFs] error creating fs:", err)
+		t.Fatal("[DestroyFS] error creating fs:", err)
 	}
 	defer fs.Destroy(RF_Hard)
 
 	err = fs.Destroy(RF_No)
 	if err != nil {
-		t.Error("[DestroyFs]", err)
+		t.Error("[DestroyFS]", err)
 	}
 
 	ok, _ := fs.Exists()
 	if ok {
-		t.Error("[DestroyFs] fs not deleted")
+		t.Error("[DestroyFS] fs not deleted")
 	}
 
 	// Destroy invalid Dataset
-	err = NewFs(badDataset).Destroy(RF_No)
+	err = NewFS(badDataset).Destroy(RF_No)
 	if !InvalidDataset.MatchString(err.Error()) {
-		t.Error("[DestroyFs] wrong error deleting invalid dataset:", err)
+		t.Error("[DestroyFS] wrong error deleting invalid dataset:", err)
 	}
 }
 
 func TestDestroyRecursiveSoft(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[DestroyRecursiveSoft] error creating fs:", err)
 	}
@@ -288,7 +288,7 @@ func TestDestroyRecursiveSoft(t *testing.T) {
 }
 
 func TestDestroyRecursiveHard(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[DestroyRecursiveHard] error creating fs:", err)
 	}
@@ -384,51 +384,51 @@ func TestDestroyRecursiveHard(t *testing.T) {
 
 }
 
-func TestListFs(t *testing.T) {
+func TestListFS(t *testing.T) {
 	want := []string{"", "/fs1", "/fs2", "/fs2/fs3"}
 
 	for _, f := range want[1:] {
-		fs, err := CreateFs(testPath + f)
+		fs, err := CreateFS(testPath + f)
 		if err != nil {
-			t.Fatal("ListFs error creating fs '%s': %s", testPath+f, err)
+			t.Fatal("ListFS error creating fs '%s': %s", testPath+f, err)
 		}
 		defer fs.Destroy(RF_Hard)
 	}
 
-	fs, err := ListFs(testPath)
+	fs, err := ListFS(testPath)
 	if err != nil {
-		t.Fatal("[ListFs] error listing fs:", err)
+		t.Fatal("[ListFS] error listing fs:", err)
 	}
 
 	if len(fs) != len(want) {
-		t.Fatal("[ListFs] fs size differs from wanted")
+		t.Fatal("[ListFS] fs size differs from wanted")
 	}
 	for i, fs := range fs {
 		if fs.Path != testPath+want[i] {
-			t.Error("ListFs: fs %s differs from wanted (%s)", fs.Path, want[i])
+			t.Error("ListFS: fs %s differs from wanted (%s)", fs.Path, want[i])
 		}
 	}
 
-	fs, err = ListFs(testPath + "/magic/forest")
+	fs, err = ListFS(testPath + "/magic/forest")
 	if err != nil {
-		t.Error("[ListFs]", err)
+		t.Error("[ListFS]", err)
 	}
 
 	if len(fs) > 0 {
-		t.Error("[ListFs] found something in magic forest, but it doesn't exists!")
+		t.Error("[ListFS] found something in magic forest, but it doesn't exists!")
 	}
 
-	fs, err = ListFs(badDataset)
+	fs, err = ListFS(badDataset)
 	if len(fs) != 0 {
-		t.Error("[ListFs] returned not empty fs list on bad dataset:", fs)
+		t.Error("[ListFS] returned not empty fs list on bad dataset:", fs)
 	}
 	if !InvalidDataset.MatchString(err.Error()) {
-		t.Error("[ListFs] wrong error checking invalid dataset:", err)
+		t.Error("[ListFS] wrong error checking invalid dataset:", err)
 	}
 }
 
 func TestListSnapshots(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[ListSnapshots] error creating fs:", err)
 	}
@@ -449,7 +449,7 @@ func TestListSnapshots(t *testing.T) {
 		}
 	}
 
-	_, err = NewFs(badDataset).ListSnapshots()
+	_, err = NewFS(badDataset).ListSnapshots()
 	if err == nil {
 		t.Error("[ListSnapshots] listed bad fs")
 	}
@@ -460,7 +460,7 @@ func TestListSnapshots(t *testing.T) {
 }
 
 func TestSudo(t *testing.T) {
-	fs, err := CreateFs(sudoPath + "/fs1")
+	fs, err := CreateFS(sudoPath + "/fs1")
 	if err == nil {
 		t.Fatal("[Sudo] created without sudo")
 	}
@@ -472,7 +472,7 @@ func TestSudo(t *testing.T) {
 
 	SetStdSudo(true)
 
-	fs, err = CreateFs(sudoPath + "/fs1")
+	fs, err = CreateFS(sudoPath + "/fs1")
 	if err != nil {
 		t.Fatal("[Sudo] error creating fs:", err)
 	}
@@ -482,7 +482,7 @@ func TestSudo(t *testing.T) {
 		t.Error("[Sudo] error destroying fs with sudo:", err)
 	}
 
-	fs2, err := CreateFs(sudoPath + "/fs2")
+	fs2, err := CreateFS(sudoPath + "/fs2")
 	defer fs2.Destroy(RF_Hard)
 	if err != nil {
 		t.Fatal("[Sudo] error creating fs with sudo:", err)
@@ -496,11 +496,11 @@ func TestSudo(t *testing.T) {
 	}
 
 	SetStdSudo(true)
-	NewFs(sudoPath + "/fs2").Destroy(RF_No)
+	NewFS(sudoPath + "/fs2").Destroy(RF_No)
 }
 
 func TestListClones(t *testing.T) {
-	fs, err := CreateFs(testPath + "/fs1")
+	fs, err := CreateFS(testPath + "/fs1")
 	if err != nil {
 		t.Fatal("[ListClones] error creating fs:", err)
 	}
@@ -552,13 +552,13 @@ func TestListClones(t *testing.T) {
 }
 
 func TestPromote(t *testing.T) {
-	origFs, err := CreateFs(testPath + "/fs6")
+	origFS, err := CreateFS(testPath + "/fs6")
 	if err != nil {
 		t.Fatal("[Promote] error creating original fs:", err)
 	}
-	defer origFs.Destroy(RF_Hard)
+	defer origFS.Destroy(RF_Hard)
 
-	snap, err := origFs.Snapshot("s1")
+	snap, err := origFS.Snapshot("s1")
 	if err != nil {
 		t.Fatal("[Promote] error creating snapshot:", err)
 	}
@@ -576,7 +576,7 @@ func TestPromote(t *testing.T) {
 		t.Fatal("[Promote] errors while promoting:", err)
 	}
 
-	origin, _ := origFs.GetProperty("origin")
+	origin, _ := origFS.GetProperty("origin")
 	if origin != newSnap {
 		t.Errorf(
 			"[Promote] original fs have wrong origin %s, want %s",
@@ -592,7 +592,7 @@ func TestPromote(t *testing.T) {
 		t.Error("[Promote] wrong error promoting not clone fs:", err)
 	}
 
-	err = NewFs(unicorn).Promote()
+	err = NewFS(unicorn).Promote()
 
 	if err == nil {
 		t.Error("[Promote] promoted not existed fs")
@@ -603,62 +603,62 @@ func TestPromote(t *testing.T) {
 }
 
 func TestSendReceive(t *testing.T) {
-	srcFs, err := CreateFs(testPath + "/src")
+	srcFS, err := CreateFS(testPath + "/src")
 	if err != nil {
 		t.Fatal("[SndRcv] error creating fs:", err)
 	}
-	defer srcFs.Destroy(RF_Hard)
+	defer srcFS.Destroy(RF_Hard)
 
-	srcSnap, err := srcFs.Snapshot("s1")
-	if err != nil {
-		t.Fatal("[SndRcv] error creating fs:", err)
-	}
-
-	srcSize, err := srcFs.GetProperty("usedbydataset")
+	srcSnap, err := srcFS.Snapshot("s1")
 	if err != nil {
 		t.Fatal("[SndRcv] error creating fs:", err)
 	}
 
-	destFs := NewFs(sendPath + "/dest")
+	srcSize, err := srcFS.GetProperty("usedbydataset")
+	if err != nil {
+		t.Fatal("[SndRcv] error creating fs:", err)
+	}
 
-	err = srcSnap.Send(destFs)
+	destFS := NewFS(sendPath + "/dest")
+
+	err = srcSnap.Send(destFS)
 	if err != nil {
 		t.Error("[SndRcv] error sending snapshot:", err)
 	}
 
-	if ok, _ := destFs.Exists(); !ok {
+	if ok, _ := destFS.Exists(); !ok {
 		t.Error("[SndRcv] destination fs doesn't exists")
 	}
 
-	destSize, _ := destFs.GetProperty("usedbydataset")
+	destSize, _ := destFS.GetProperty("usedbydataset")
 
 	if srcSize != destSize {
 		t.Errorf("[SndRcv] dest fs have different size %s, wanted %s",
 			destSize, srcSize)
 	}
 
-	destSnap := NewSnapshot(destFs.Path + "@s1")
+	destSnap := NewSnapshot(destFS.Path + "@s1")
 	if ok, _ := destSnap.Exists(); !ok {
 		t.Error("[SndRcv] destination snapshot fs doesn't exists")
 	}
 
-	secondSnap, _ := srcFs.Snapshot("s2")
-	err = secondSnap.SendIncremental(srcSnap, destFs)
+	secondSnap, _ := srcFS.Snapshot("s2")
+	err = secondSnap.SendIncremental(srcSnap, destFS)
 	if err != nil {
 		t.Error("[SndRcv] error sending incremental snapshot:", err)
 	}
 
-	destSnap = NewSnapshot(destFs.Path + "@s2")
+	destSnap = NewSnapshot(destFS.Path + "@s2")
 	if ok, _ := destSnap.Exists(); !ok {
 		t.Error("[SndRcv] destination snapshot fs doesn't exists after incremental")
 	}
 
-	srcFs.Destroy(RF_Hard)
-	destFs.Destroy(RF_Hard)
+	srcFS.Destroy(RF_Hard)
+	destFS.Destroy(RF_Hard)
 
 	fmt.Println("Sending not existing fs")
 	srcSnap = NewSnapshot(unicorn + "@s1")
-	err = srcSnap.Send(destFs)
+	err = srcSnap.Send(destFS)
 	if err == nil {
 		t.Error("[SndRcv] sended not existent snapshot without errors")
 	}
@@ -666,28 +666,28 @@ func TestSendReceive(t *testing.T) {
 		t.Error("[SndRcv] wrong error sending not existent snapshot:", err)
 	}
 
-	srcFs, err = CreateFs(testPath + "/src")
+	srcFS, err = CreateFS(testPath + "/src")
 	if err != nil {
 		t.Fatal("[SndRcv] error creating src fs:", err)
 	}
-	t.Log("created source Fs")
-	srcSnap, err = srcFs.Snapshot("s1")
+	t.Log("created source FS")
+	srcSnap, err = srcFS.Snapshot("s1")
 	if err != nil {
 		t.Fatal("[SndRcv] error creating src fs snapshot:", err)
 	}
-	t.Log("created source Fs snapshot")
+	t.Log("created source FS snapshot")
 
-	fss, _ := ListFs(testPath)
+	fss, _ := ListFS(testPath)
 	t.Log("filesystems: %s", fss)
-	snaps, _ := srcFs.ListSnapshots()
+	snaps, _ := srcFS.ListSnapshots()
 	t.Log("snapshots: %s", snaps)
 
-	destFs = NewFs(badDataset)
+	destFS = NewFS(badDataset)
 	fmt.Println("Sending to bad fs")
 
-	err = srcSnap.Send(destFs)
+	err = srcSnap.Send(destFS)
 	if err == nil {
-		destFs.Destroy(RF_No)
+		destFS.Destroy(RF_No)
 		t.Error("[SndRcv] sended to bad fs")
 	}
 
@@ -695,14 +695,14 @@ func TestSendReceive(t *testing.T) {
 		t.Fatal("[SndRcv] wrong error sending to bad dataset:", err)
 	}
 
-	err = srcSnap.Send(srcFs)
+	err = srcSnap.Send(srcFS)
 	if err == nil {
 		t.Error("[SndRcv] sended to existent fs")
 	}
 	if !BrokenPipe.MatchString(err.Error()) {
 		t.Error("[SndRcv] wrong error sending to existent fs:", err)
 	}
-	srcFs.Destroy(RF_Hard)
+	srcFS.Destroy(RF_Hard)
 }
 
 func TestRemote(t *testing.T) {
@@ -711,8 +711,8 @@ func TestRemote(t *testing.T) {
 		t.Fatal("[Remote] error initializing connection:", err)
 	}
 
-	z := NewZfs(r, true)
-	fs, err := z.CreateFs(testPath + "/fs")
+	z := NewZFS(r, true)
+	fs, err := z.CreateFS(testPath + "/fs")
 	if err != nil {
 		t.Error("[Remote]", err)
 	}
